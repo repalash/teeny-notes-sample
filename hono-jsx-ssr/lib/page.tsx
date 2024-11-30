@@ -7,10 +7,10 @@ export function Navbar(props: {user?: string}) {
         <ul>
             <li><a href="/"><strong>Notes App</strong></a></li>
         </ul>
-        <ul>
+        {props.user && <ul>
             <li><a href="/notes">Dashboard</a></li>
             <li><a href="/notes/create">Create</a></li>
-        </ul>
+        </ul>}
         <ul>
             {props.user && <li>{props.user}</li>}
             <li>

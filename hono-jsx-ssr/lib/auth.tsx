@@ -29,7 +29,7 @@ export const loginRoute = (c: Context<$Env>)=>formRoute(c, zLogin, LoginCard, as
     const auth = c.get('$db').table('users').extension('auth')
     const res = await auth.loginWithPassword(data)
     return login(c, res.token)
-})
+}, false, true)
 
 export function RegisterCard(props: FormProps) {
     return <article style={{maxWidth: '800px', margin: '0 auto', padding: '2rem'}}>
@@ -66,4 +66,4 @@ export const registerRoute = (c: Context<$Env>)=>formRoute(c, zRegister, Registe
     const auth = c.get('$db').table('users').extension('auth')
     const res = await auth.signUp(data)
     return login(c, res.token)
-})
+}, false, true)

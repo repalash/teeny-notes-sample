@@ -1,6 +1,7 @@
 import {Context} from "hono";
 import {z} from "zod";
 import {FC} from "hono/jsx";
+import {$Env} from "teenybase/worker";
 
 export type FormProps<T = Record<string, string|boolean|number|null|undefined|File>> = {
     data?: T,
@@ -8,10 +9,12 @@ export type FormProps<T = Record<string, string|boolean|number|null|undefined|Fi
     errors?: Record<keyof T, string | string[] | undefined>
 }
 
-export async function formRoute<T>(c: Context, zv: z.ZodType<T>, Component: FC<FormProps<T>>, route: (data: T) => Promise<Response>) {
+export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component: FC<FormProps<T>>, route: (data: T) => Promise<Response>, requireLogin = false, requireLogout = false) {
     let error = c.req.query('error')
     let data: T | undefined = undefined
     let errors: FormProps<T>['errors'] | undefined = undefined
+    if(requireLogin && !c.get('$db').auth.uid) return c.redirect('/login')
+    if(requireLogout && !!c.get('$db').auth.uid) return c.redirect('/')
     if (c.req.method === 'POST') {
         data = Object.fromEntries((await c.req.formData())?.entries()) as T
         const parsed = zv.safeParse(data)

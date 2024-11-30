@@ -71,6 +71,7 @@ export const zCreateNote = z.object({
 
 export const createNoteRoute = (c: Context<$Env>)=>formRoute(c, zCreateNote, CreateNoteCard, async (data) => {
     const db = c.get('$db')
+    if(!db.auth.uid) return c.redirect('/login')
     const dat = {
         ...data,
         slug: randomString(8),
@@ -78,8 +79,9 @@ export const createNoteRoute = (c: Context<$Env>)=>formRoute(c, zCreateNote, Cre
         // meta: JSON.stringify(JSON.parse(data.meta)),
     }
     const note = await db.table('notes').insert({values: dat, returning: 'slug' })
+    if(!note.length) throw new Error('Unable to create note, make sure you have the necessary permissions')
     return c.redirect('/notes/view/'+note[0].slug)
-})
+}, true)
 
 export const EditNoteCard = (slug: string) => async (props: FormProps) => {
     if (!props.data) {
@@ -98,4 +100,4 @@ export const editNoteRoute = (c: Context<$Env>, slug: string)=>
             const db = c.get('$db')
             const note = await db.table('notes').update({setValues: data, returning: 'slug', where: `slug = "${slug}"`})
             return c.redirect('/notes/view/'+note[0].slug)
-    })
+    }, true)
