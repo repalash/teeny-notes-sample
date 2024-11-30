@@ -1,0 +1,39 @@
+{
+  "name": "teeny-notes-sample",
+  "version": "0.0.1",
+  "description": "A sample notes app built with teenybase and multiple frontends",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate": "teeny generate --local",
+    "migrate": "teeny migrate --local",
+    "backup:local": "teeny backup --local",
+    "dev": "teeny dev --local",
+    "build:local": "teeny build --local",
+    "exec": "teeny exec --local",
+    "list-users": "teeny exec --local users/select?select=email",
+    "list-notes": "teeny exec --local notes/select?select=*",
+
+    "deploy": "teeny deploy --migrate --remote",
+    "secrets-upload": "teeny secrets --remote --upload",
+    "build": "teeny build --remote",
+    "backup": "teeny backup --remote",
+    "generate:remote": "teeny generate --remote",
+    "migrate:remote": "teeny migrate --remote",
+    "dev:remote": "teeny dev --remote"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "teenybase": "0.0.1",
+    "wrangler": "^3.91.0",
+    "@cloudflare/workers-types": "^4.20240821.1",
+    "hono": "4.6.12",
+    "@hono/zod-validator": "^0.4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/repalash/teeny-notes-sample.git"
+  },
+  "author": "repalash <palash@shaders.app>",
+  "license": "Apache-2.0"
+}
