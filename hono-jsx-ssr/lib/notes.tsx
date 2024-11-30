@@ -8,7 +8,7 @@ export const NotesList = async (p: NotesListProps) => {
     const c = useRequestContext<$Env>()
     const db = c.get('$db')
     const notes = await db.table('notes').select({
-        select: 'title, content, tags, meta, views, is_public, slug, views',
+        select: 'title, content, tags, meta, views, is_public, slug, views, owner_id',
         where: p.where,
         offset: p.offset || 0,
         limit: 10,
@@ -21,7 +21,7 @@ export const NotesList = async (p: NotesListProps) => {
         <div style={{display: "flex", flexWrap: "wrap", gap: "2rem"}}>
             {!notes.items.length && <p>No notes found</p>}
             {notes.items.map(note => (
-                <ViewNoteCard data={note} showView={true}/>
+                <ViewNoteCard data={note} showView={true} showEdit={note.owner_id === db.auth.uid}/>
             ))}
         </div>
         <hr/>

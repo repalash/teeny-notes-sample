@@ -13,6 +13,9 @@ export function Navbar(props: {user?: string}) {
         </ul>}
         <ul>
             {props.user && <li>{props.user}</li>}
+            {!props.user && <li>
+                <a href="/register">Register</a>
+            </li>}
             <li>
                 {props.user ? <a href="/logout">Logout</a> : <a href="/login">Login</a>}
             </li>

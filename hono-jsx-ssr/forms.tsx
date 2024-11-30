@@ -26,7 +26,9 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
         if (parsed.data) {
             data = parsed.data
             const res = await route(parsed.data).catch((e) => {
-                error = (e as any).message || 'Unknown error'
+                error = (e as any)?.message || 'Unknown error'
+                if(e?.input)
+                    errors = Object.fromEntries(Object.entries(e.input).map(([k, v]: [string, any]) => [k, v.message /*+ (v.code ? `(${v.code})` : '')*/])) as any
                 console.error({...e})
                 return null
             })

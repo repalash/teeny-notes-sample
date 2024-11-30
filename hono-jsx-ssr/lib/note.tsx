@@ -2,17 +2,18 @@ import {FormProps, formRoute} from "../forms";
 import {ErrorCard, FormInput, FormTextArea} from "./form";
 import {z} from "zod";
 import {Context} from "hono";
-import {$Env} from "teenybase/worker";
+import {$Database, $Env} from "teenybase/worker";
 import {randomString, zJsonString} from "teenybase";
 import {useRequestContext} from "hono/jsx-renderer";
+import {HTTPException} from "hono/http-exception";
 
-export function ViewNoteCard(props: {data: any, showView?: boolean}){
+export function ViewNoteCard(props: {data: any, showView?: boolean, showEdit?: boolean}){
     return <article style={{maxWidth: '800px', flexBasis: '30%', flex: '1 1', minWidth: "300px", margin: '0 auto', padding: '2rem'}}>
         <span style={{display: "flex", justifyContent: "space-between"}}>
         <h3>{props.data.title}</h3>
         <div style={{display: 'flex', gap: "0.5rem"}}>
         {props.showView && <a href={'/notes/view/' + props.data.slug}>View</a>}
-        <a href={'/notes/edit/' + props.data.slug}>Edit</a>
+        {props.showEdit && <a href={'/notes/edit/' + props.data.slug}>Edit</a>}
         </div>
         </span>
         <pre>{props.data.content}</pre>
@@ -22,21 +23,20 @@ export function ViewNoteCard(props: {data: any, showView?: boolean}){
     </article>
 }
 
-async function getNote(c: Context<$Env>, slug: string) {
-    const db = c.get('$db')
+async function getNote(db: $Database, slug: string) {
     const note = await db.table('notes').select({
-        select: 'title, content, tags, meta, views, is_public, slug',
+        select: 'title, content, tags, meta, views, is_public, slug, owner_id',
         where: `slug = "${slug}"`, limit: 1
     })
     return note.length ? note[0] : null;
 }
 
 export const viewNoteRoute = async (c: Context<$Env>, slug: string)=>{
-    const note = await getNote(c, slug);
+    const db = c.get('$db')
+    const note = await getNote(db, slug);
     if(!note) return c.notFound()
-    return c.render(<ViewNoteCard data={note}/>)
+    return c.render(<ViewNoteCard data={note} showView={false} showEdit={note.owner_id === db.auth.uid}/>)
 }
-
 
 export function CreateNoteCard(props: FormProps){
     return <article style={{maxWidth: '800px', margin: '0 auto', padding: '2rem'}}>
@@ -83,21 +83,23 @@ export const createNoteRoute = (c: Context<$Env>)=>formRoute(c, zCreateNote, Cre
     return c.redirect('/notes/view/'+note[0].slug)
 }, true)
 
-export const EditNoteCard = (slug: string) => async (props: FormProps) => {
-    if (!props.data) {
-        const c = useRequestContext<$Env>()
-        const note = await getNote(c, slug)
-        props.data = note
-    }
-    return <CreateNoteCard {...props}/>
+export const EditNoteCard = async (c: Context<$Env>, slug: string) => {
+    const db = c.get('$db')
+    const note = await getNote(db, slug)
+    if (note.owner_id !== db.auth.uid) throw new HTTPException(401, {message: 'You do not have permission to edit this note'})
+    return async (props: FormProps) => {
+        props.data = {...note, ...props.data}
+        return <CreateNoteCard {...props}/>
+    };
 }
 
 const zEditNote = zCreateNote
 
-export const editNoteRoute = (c: Context<$Env>, slug: string)=>
-    formRoute(c, zEditNote, EditNoteCard(slug),
+export const editNoteRoute = async (c: Context<$Env>, slug: string)=>
+    formRoute(c, zEditNote, await EditNoteCard(c, slug),
         async (data) => {
             const db = c.get('$db')
             const note = await db.table('notes').update({setValues: data, returning: 'slug', where: `slug = "${slug}"`})
+            if(!note.length) throw new Error('Unable to update note, make sure you have the necessary permissions')
             return c.redirect('/notes/view/'+note[0].slug)
     }, true)
