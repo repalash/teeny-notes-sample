@@ -1,6 +1,7 @@
 import {$Database, teenyHono, $Env} from "teenybase/worker";
 import config from './migrations/config.json'
 import {honoJSXAppSSR} from "./hono-jsx-ssr/app";
+import {OpenApiExtension} from "teenybase/worker";
 
 export interface Env {
   Bindings: $Env['Bindings'] & {
@@ -10,7 +11,11 @@ export interface Env {
   Variables: $Env['Variables']
 }
 
-const app = teenyHono<Env>((c)=> new $Database(c, config, c.env.PRIMARY_DB, c.env.PRIMARY_R2))
+const app = teenyHono<Env>((c)=> {
+  const db = new $Database(c, config, c.env.PRIMARY_DB, c.env.PRIMARY_R2)
+  db.extensions.push(new OpenApiExtension(db, true))
+  return db
+})
 
 // app.get('/', async (c) => {
 //   const db = c.get('$db')

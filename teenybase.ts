@@ -1,24 +1,19 @@
-import {
-    DatabaseSettings,
-    TableData,
-    TableAuthExtensionData,
-    TableRulesExtensionData,
-    TableFieldDataType, TableFieldSqlDataType0, TableFieldSqlDataType1
-} from "teenybase"
-import {baseFields, authFields} from "teenybase/scaffolds/fields";
+import {DatabaseSettings, sql, sqlValue, TableAuthExtensionData, TableData, TableRulesExtensionData} from "teenybase"
+import {authFields, baseFields, createdTrigger} from "teenybase/scaffolds/fields";
 
 const userTable: TableData = {
     name: "users",
-    // lastName: "users",
     // r2Base: "users",
+    autoSetUid: true, // automatically set the uid to a random uuidv4
     fields: [
         ...baseFields,
         ...authFields,
     ],
+    indexes: [{fields: "role COLLATE NOCASE"}],
     extensions: [
         {
             name: "rules",
-            listRule: "(auth.uid == id) | auth.role ~ '%admin'",
+            listRule: "(auth.uid == id) | auth.role ~ '%admin' | meta->>'$.pvt'!=true",
             viewRule: "(auth.uid == id) | auth.role ~ '%admin'",
             createRule: "(auth.uid == null & role == 'guest') | (auth.role ~ '%admin' & role != 'superadmin')",
             updateRule: "(auth.uid == id & role == new.role & meta == new.meta) | (auth.role ~ '%admin' & new.role != 'superadmin' & (role != 'superadmin' | auth.role = 'superadmin'))",
@@ -54,23 +49,38 @@ const userTable: TableData = {
             }
         } as TableAuthExtensionData,
     ],
-    autoSetUid: true,
+    triggers: [
+        // raise an error if created column is updated (optional)
+        createdTrigger,
+    ],
 }
 const notesTable: TableData = {
     name: "notes",
-    autoSetUid: true,
+    autoSetUid: true, // automatically set the uid to a random uuidv4
     fields: [
         ...baseFields,
-        {name: "owner_id", type: TableFieldDataType.relation, sqlType: TableFieldSqlDataType0.text, notNull: true, foreignKey: {table: "users", column: "id"}},
-        {name: "title", type: TableFieldDataType.text, sqlType: TableFieldSqlDataType0.text, notNull: true},
-        {name: "content", type: TableFieldDataType.text, sqlType: TableFieldSqlDataType0.text, notNull: true},
-        {name: "is_public", type: TableFieldDataType.bool, sqlType: TableFieldSqlDataType1.boolean, notNull: true, default: 'false'},
-        {name: "slug", type: TableFieldDataType.text, sqlType: TableFieldSqlDataType0.text, unique: true, notNull: true},
-        {name: "tags", type: TableFieldDataType.text, sqlType: TableFieldSqlDataType0.text},
-        {name: "meta", type: TableFieldDataType.json, sqlType: TableFieldSqlDataType1.json},
-        {name: "views", type: TableFieldDataType.number, sqlType: TableFieldSqlDataType0.integer, noUpdate: true, noInsert: true, default: "0"},
-        {name: "archived", type: TableFieldDataType.bool, sqlType: TableFieldSqlDataType1.boolean, noInsert: true, default: "false"},
-        {name: "deleted_at", type: TableFieldDataType.date, sqlType: TableFieldSqlDataType1.timestamp, noInsert: true, default: "false"},
+        {name: "owner_id", type: "relation", sqlType: "text", notNull: true, foreignKey: {table: "users", column: "id"}},
+        {name: "title", type: "text", sqlType: "text", notNull: true},
+        {name: "content", type: "text", sqlType: "text", notNull: true},
+        {name: "is_public", type: "bool", sqlType: "boolean", notNull: true, default: sqlValue(false)},
+        {name: "slug", type: "text", sqlType: "text", unique: true, notNull: true, noUpdate: true},
+        {name: "tags", type: "text", sqlType: "text"},
+        {name: "meta", type: "json", sqlType: "json"},
+        {name: "cover", type: "file", sqlType: "text"},
+        {name: "views", type: "number", sqlType: "integer", noUpdate: true, noInsert: true, default: sqlValue(0)},
+        {name: "archived", type: "bool", sqlType: "boolean", noInsert: true, default: sqlValue(false)},
+        {name: "deleted_at", type: "date", sqlType: "timestamp", noInsert: true, default: sqlValue(false)},
+    ],
+    fullTextSearch: {
+        fields: ["title", "content", "tags"],
+        tokenize: "trigram"
+    },
+    indexes: [
+        {fields: "owner_id"},
+        {fields: "tags COLLATE NOCASE"}, // collate nocase so that like search which is case-insensitive uses the index
+        {fields: "is_public"},
+        {fields: "archived"},
+        {fields: "deleted_at"},
     ],
     extensions: [
         {
@@ -87,6 +97,10 @@ const notesTable: TableData = {
             // Can delete if owner or admin
             deleteRule: "auth.role ~ '%admin' | (auth.uid != null & owner_id == auth.uid)",
         } as TableRulesExtensionData,
+    ],
+    triggers: [
+        // raise an error if created column is updated (optional)
+        createdTrigger,
     ],
 }
 
@@ -108,9 +122,10 @@ export default {
         mailgun: {
             MAILGUN_API_SERVER: "mail.example.com",
             // MAILGUN_API_URL: "https://api.mailgun.net/v3/"
-            MAILGUN_API_KEY: "xxxxxx-xxxxxx-xxxxxxx",
-            MAILGUN_WEBHOOK_SIGNING_KEY: "aaaaa",
-            DISCORD_MAILGUN_NOTIFY_WEBHOOK: "xxxx"
+            MAILGUN_API_KEY: "$MAILGUN_API_KEY",
+            MAILGUN_WEBHOOK_SIGNING_KEY: "$MAILGUN_WEBHOOK_SIGNING_KEY",
+            MAILGUN_WEBHOOK_ID: "notes-app",
+            DISCORD_MAILGUN_NOTIFY_WEBHOOK: "xxxxxxxxx"
             // EMAIL_BLOCKLIST: "a.com,b.com" // comma separated list of domains
         },
     },

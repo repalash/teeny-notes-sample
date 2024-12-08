@@ -2,6 +2,7 @@ import {Context} from "hono";
 import {z} from "zod";
 import {FC} from "hono/jsx";
 import {$Env} from "teenybase/worker";
+import {parseRequestBody} from "teenybase/worker";
 
 export type FormProps<T = Record<string, string|boolean|number|null|undefined|File>> = {
     data?: T,
@@ -16,11 +17,12 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
     if(requireLogin && !c.get('$db').auth.uid) return c.redirect('/login')
     if(requireLogout && !!c.get('$db').auth.uid) return c.redirect('/')
     if (c.req.method === 'POST') {
-        data = Object.fromEntries((await c.req.formData())?.entries()) as T
+        data = (await parseRequestBody(c.req)) as T
         const parsed = zv.safeParse(data)
         if (parsed.error) {
             errors = parsed.error.formErrors.fieldErrors as any
-            // console.log(errors)
+            console.log(data)
+            console.log(errors)
             error = 'Invalid form values'
         }
         if (parsed.data) {
@@ -29,6 +31,7 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
                 error = (e as any)?.message || 'Unknown error'
                 if(e?.input)
                     errors = Object.fromEntries(Object.entries(e.input).map(([k, v]: [string, any]) => [k, v.message /*+ (v.code ? `(${v.code})` : '')*/])) as any
+                // console.error(e)
                 console.error({...e})
                 return null
             })

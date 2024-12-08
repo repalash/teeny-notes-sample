@@ -1,31 +1,41 @@
 import {useRequestContext} from "hono/jsx-renderer";
 import {$Env} from "teenybase/worker";
-import {ViewNoteCard} from "./note";
+import {getNotes, ViewNoteCard} from "./note";
 import {Suspense} from "hono/jsx";
 
-export type NotesListProps = {where: string, offset?: number}
+const pageSize = 10
+export type NotesListProps = {
+    where: string,
+    page?: number,
+    limit?: number,
+    pageLink?: string,
+    tag?: string
+    search?: string
+}
 export const NotesList = async (p: NotesListProps) => {
     const c = useRequestContext<$Env>()
     const db = c.get('$db')
-    const notes = await db.table('notes').select({
-        select: 'title, content, tags, meta, views, is_public, slug, views, owner_id',
-        where: p.where,
-        offset: p.offset || 0,
-        limit: 10,
-        order: '-views'
-    }, true).catch(e => {
-        console.error(e)
-        return {items: [], total: 0}
-    })
+    let where = `(${p.where})`
+    if(p.tag)
+        // note - this works since we are adding , to the beg and end of the tags during insert and update
+        where += ` & tags ~ '%,'||${JSON.stringify(p.tag.replace(/ /g,''))}||',%'`
+    if(p.search)
+        where += ` & notes @@ ${JSON.stringify(p.search)}`
+    const notes = await getNotes(db, where, p.page ? (p.page - 1) * (p.limit||pageSize) : 0, (p.limit||pageSize))
+    const totalPages = Math.ceil(notes.total / (p.limit || pageSize))
     return <>
         <div style={{display: "flex", flexWrap: "wrap", gap: "2rem"}}>
             {!notes.items.length && <p>No notes found</p>}
             {notes.items.map(note => (
-                <ViewNoteCard data={note} showView={true} showEdit={note.owner_id === db.auth.uid}/>
+                <ViewNoteCard data={note} showView={true} showEdit={note.owner_id === db.auth.uid} small={true}/>
             ))}
         </div>
         <hr/>
-        {notes.total > 0 ? `Total notes: ${notes.total}` : ''}
+        {notes.total > 0 && p.page && p.pageLink && (<div style={{display: "flex", marginTop: "1rem", gap: "2rem", justifyContent: "center"}}>
+            <a href={p.pageLink.replace(':page', p.page-1+'')} disabled={p.page === 1}>Previous</a>
+            <span>Page {p.page}/{totalPages} ({notes.total} notes)</span>
+            <a href={p.pageLink.replace(':page', p.page+1+'')} disabled={p.page === totalPages}>Next</a>
+        </div>)}
     </>
 }
 

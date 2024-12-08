@@ -1,11 +1,20 @@
 # Notes App
 
 A sample notes app for [teenybase](https://teenybase.com/index.html).
-> teenybase is in pre-alpha and not fit for production use.
+> teenybase is in pre-alpha and not suitable for production use yet.
 
-Demo - https://notes-example.teenybase.com
+Teenybase is a serverless backend \[framework\] with a single file configuration and deployment on cloudflare.
+It includes a sqlite database(d1), file storage(s3/r2), jwt, authentication, custom database access rules(query from frontend), email(mailgun), and more.
 
-## Features
+This repository is a sample application with teenybase backend and multiple frontend implementation samples. 
+It can be directly cloned and run locally or deployed on cloudflare.
+
+OpenAPI Docs - https://notes-example.teenybase.com/api/v1/doc/ui
+
+Frontend demos
+- Hono JSX SSR - https://notes-example.teenybase.com
+
+## Contents
 
 - [x] Backend in a file - [teenybase.ts](./teenybase.ts)
   - [x] notes table
@@ -35,11 +44,12 @@ Demo - https://notes-example.teenybase.com
     - [ ] Apple Auth
     - [ ] Github Auth
     - [ ] Discord Auth
-    - [x] Dashboard with private notes list
+    - [x] Account notes list
     - [x] Create note
     - [x] Edit note
     - [x] View note
-    - [ ] Full text search
+    - [x] Pagination
+    - [x] Full text search
     - [ ] Account settings
   - [ ] Hono Client JSX
   - [ ] React (vite)
@@ -113,56 +123,11 @@ npm run dev
 
 Open the browser and navigate to http://localhost:8787 to see the app.
 
-The OpenAPI docs UI (Swagger) is available at http://localhost:8787/doc/ui
+The OpenAPI docs UI (Swagger) is available at http://localhost:8787/api/v1/doc/ui
 
+## Production
 
-### Settings and schema
-
-The database schema, rules and other backend settings are defined as JSON in [teenybase.ts](./teenybase.ts).
-
-The settings can be directly edited in the file. After editing the file, migrations needs to be generated and applied to see the effects.
-
-The generated migrations and built settings are stored in the `migrations` folder. 
-This folder is supposed to be committed to version control(git) but files in this folder should not be edited manually. 
-Any change will be reset the next time migrations are generated.
-This folder can be safely deleted, as it will be generated again when running `generate` or `migrate`.
-
-#### Generate
-
-To validate the database settings and schema, and generate the settings json and migrations, run
-```bash
-npm run generate
-# or teeny generate --local
-```
-
-This will compile the `teenybase.ts` file and generate `migrations/next-config.json` and `migrations/xxx_create_table_xxxx.sql` files.
-
-This step is optional and can be skipped as latest migrations are generating every time migrate or deploy is run.
-
-#### Migrate
-
-To apply the migrations and update the database with the settings, run 
-```bash
-npm run migrate
-# or teeny migrate --local
-```
-
-This will first run generate, then apply the un-applied migrations to the database, and also update the `migrations/config.json` file with the latest settings from `teenybase.ts` file.
-
-The `migrations/config.json` file contains the built database settings and schema that the backend uses. This file is imported and used in `worker.ts` file.
-
-### Build and deploy
-
-To create a worker build, run
-
-```bash
-npm run build
-# or teeny build --local
-```
-
-This is only required for testing, and not for deployment as a worker build is created automatically when deploying.
-
-#### First Deployment
+### First Deployment
 
 Initial Setup - 
 - Run `wrangler login` and follow steps to login to cloudflare account. This would create a token and save it to the local machine.
@@ -201,6 +166,8 @@ This would deploy the worker and set the secrets.
 > - apac	Asia-Pacific 
 > - oc	Oceania
 
+> Creation of resources from config will be automated in future versions of teenybase.
+
 Next, deploy the worker to cloudflare.
 
 ```bash
@@ -216,6 +183,26 @@ On first deployment, the worker will be deployed and database migrations will be
 
 If this is the first deployment, the secrets will automatically be uploaded from .prod.vars file. Make sure the secrets are set properly in the `.prod.vars` file.
 
+Optionally create a superadmin account or insert other data using exec command -
+
+```bash
+teeny exec --remote users/insert -m post -b '{"values":{"name":"admin","username":"admin","role":"superadmin","email":"admin@example.com","password":"admin123456","passwordConfirm":"admin123456"},"returning":"*"}'
+```
+
+### Deploy
+
+To update the worker with new migrations, or worker changes, simply run the deployment again
+
+```bash
+npm run deploy
+# or teeny deploy --migrate --remote
+```
+
+If there are any migrations required, it will prompt to apply them. Respond with `y` to apply the migrations.
+
+### Secrets 
+
+The secrets are uploaded automatically when deploying the worker for the first time.
 To upload the secrets manually or to update after first deployment, edit the file `.prod.vars` and run
 
 ```bash
@@ -223,12 +210,6 @@ teeny secrets upload --remote
 ``` 
 
 > Note - If any secret is removed from the `.prod.vars` file and uploaded, it will not be removed from the cloudflare secrets. It will need to be removed manually from the cli or the cloudflare dashboard.
-
-Optionally create a superadmin account or insert other data using exec command - 
-
-```bash
-teeny exec --remote users/insert -m post -b '{"values":{"name":"admin","username":"admin","role":"superadmin","email":"admin@example.com","password":"admin123456","passwordConfirm":"admin123456"},"returning":"*"}'
-```
 
 ### Backup
 
@@ -241,3 +222,62 @@ teeny backup --remote
 
 This will create a backup of the database settings, schema and sql data in the `db_backups/[local|remote]` folder.
 This will not backup the files in the r2 bucket, that must be done separately. Check the teenybase docs for more details.
+
+### Build
+To create a worker build, run
+
+```bash
+npm run build
+# or teeny build --local
+```
+
+This is only required for testing, and not for deployment as a worker build is created automatically when deploying.
+
+
+
+### Settings and schema
+
+The database schema, rules and other backend settings are defined as JSON in [teenybase.ts](./teenybase.ts).
+
+The settings can be directly edited in the file. After editing the file, migrations needs to be generated and applied to see the effects.
+
+The generated migrations and built settings are stored in the `migrations` folder.
+This folder is supposed to be committed to version control(git) but files in this folder should not be edited manually.
+Any change will be reset the next time migrations are generated.
+This folder can be safely deleted, as it will be generated again when running `generate` or `migrate`.
+
+#### Generate
+
+To validate the database settings and schema, and generate the settings json and migrations, run
+```bash
+npm run generate
+# or teeny generate --local
+```
+
+This will compile the `teenybase.ts` file and generate `migrations/next-config.json` and `migrations/xxx_create_table_xxxx.sql` files.
+
+This step is optional and can be skipped as latest migrations are generating every time migrate or deploy is run.
+
+#### Migrate
+
+To apply the migrations and update the database with the settings, run
+```bash
+npm run migrate
+# or teeny migrate --local
+```
+
+This will first run generate, then apply the un-applied migrations to the database, and also update the `migrations/config.json` file with the latest settings from `teenybase.ts` file.
+
+The `migrations/config.json` file contains the built database settings and schema that the backend uses. This file is imported and used in `worker.ts` file.
+
+### Email Setup
+
+Sending emails for email verification, password reset etc. is done using the `mailgun` service. 
+An account can be created at [mailgun.com](https://www.mailgun.com/) which gives 100 emails/day for free on a custom domain.
+
+Once a mailgun account is created, set the details in `teenybase.ts` file under `email`.
+> Note - The keys (`MAILGUN_API_KEY` and `MAILGUN_WEBHOOK_SIGNING_KEY`) should be set in the `.dev.vars` and `.prod.vars` files and referenced in the `teenybase.ts` file with a `$` sign, similar to other secrets.
+
+Optionally, to log mailgun errors and receive them on discord 
+- add webhooks in mailgun to `https://YOUR_DEPLOYMENT/api/v1/mailgun/webhook/notes-app` for all the events you would like to be notified about.
+- add a webhook to a discord server(server settings -> Integrations -> webhooks) and add the url/id to `DISCORD_MAILGUN_NOTIFY_WEBHOOK` in `teenybase.ts->email->mailgun`

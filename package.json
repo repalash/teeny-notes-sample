@@ -11,8 +11,12 @@
     "dev": "teeny dev --local",
     "build:local": "teeny build --local",
     "exec": "teeny exec --local",
+    "get-notes": "teeny exec --local \"notes/select?select=title||':'||content||tags=>full,owner_id(id,name,email)\"",
+    "search-notes": "teeny exec --local \"notes/select?select=concat(title,content,tags)=>content&where=notes@@'test OR asd'\"",
+    "explain-search-notes": "teeny exec --local --explain \"notes/select?select=concat(title,content,tags)=>content&where=notes@@'test OR asd'\"",
     "list-users": "teeny exec --local users/select?select=email",
     "list-notes": "teeny exec --local notes/select?select=*",
+    "exec-sql": "npx wrangler d1 execute PRIMARY_DB --local --persist-to \"./.local-persist\" --json --command \"select * from sqlite_schema\"",
 
     "deploy": "teeny deploy --migrate --remote",
     "secrets-upload": "teeny secrets --remote --upload",
@@ -20,11 +24,12 @@
     "backup": "teeny backup --remote",
     "generate:remote": "teeny generate --remote",
     "migrate:remote": "teeny migrate --remote",
-    "dev:remote": "teeny dev --remote"
+    "dev:remote": "teeny dev --remote",
+    "delete-public-notes": "teeny exec --remote -m post notes/delete -b '{\"where\":\"is_public = true\",\"returning\":[\"title\"]}'"
   },
   "devDependencies": {
     "@types/node": "^22.5.0",
-    "teenybase": "0.0.1",
+    "teenybase": "0.0.2",
     "wrangler": "^3.91.0",
     "@cloudflare/workers-types": "^4.20240821.1",
     "hono": "4.6.12",

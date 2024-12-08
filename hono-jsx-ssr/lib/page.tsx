@@ -8,7 +8,7 @@ export function Navbar(props: {user?: string}) {
             <li><a href="/"><strong>Notes App</strong></a></li>
         </ul>
         {props.user && <ul>
-            <li><a href="/notes">Dashboard</a></li>
+            <li><a href="/notes">My Notes</a></li>
             <li><a href="/notes/create">Create</a></li>
         </ul>}
         <ul>
@@ -40,6 +40,19 @@ export function BaseLayout({children}: PropsWithChildren) {
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css"/>
         <title>Notes App</title>
         <meta name="description" content="A simple notes app."/>
+        <style>{`
+        :root{
+            --pico-form-element-spacing-horizontal: calc(1rem * 0.5);
+            --pico-form-element-spacing-vertical: calc(0.75rem * 0.5);
+            --pico-spacing: calc(1rem * 0.5);
+            --pico-typography-spacing-vertical: calc(1rem * 1);
+            --pico-line-height: 1.5;
+            --pico-font-weight: 400;
+            --pico-font-size: 110%;
+        }
+        
+        `}
+        </style>
     </head>
     <body>
     <header className="container">
@@ -48,6 +61,9 @@ export function BaseLayout({children}: PropsWithChildren) {
     <main className="container">
         {children}
     </main>
+    <footer className="container" style={{marginBottom: "1rem"}}>
+        Powered by <a href="https://teenybase.org">Teenybase</a>
+    </footer>
     </body>
     </html>
 }
