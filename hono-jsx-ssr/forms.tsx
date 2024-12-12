@@ -1,5 +1,5 @@
 import {Context} from "hono";
-import {z} from "zod";
+import {z, ZodError} from "zod";
 import {FC} from "hono/jsx";
 import {$Env} from "teenybase/worker";
 import {parseRequestBody} from "teenybase/worker";
@@ -29,7 +29,11 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
             data = parsed.data
             const res = await route(parsed.data).catch((e) => {
                 error = (e as any)?.message || 'Unknown error'
-                if(e?.input)
+                if(e instanceof ZodError) {
+                    errors = e.formErrors.fieldErrors as any
+                    error = 'Invalid form values'
+                }
+                else if(e?.input)
                     errors = Object.fromEntries(Object.entries(e.input).map(([k, v]: [string, any]) => [k, v.message /*+ (v.code ? `(${v.code})` : '')*/])) as any
                 // console.error(e)
                 console.error({...e})

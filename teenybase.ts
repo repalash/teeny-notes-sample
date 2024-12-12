@@ -61,7 +61,7 @@ const notesTable: TableData = {
         ...baseFields,
         {name: "owner_id", type: "relation", sqlType: "text", notNull: true, foreignKey: {table: "users", column: "id"}},
         {name: "title", type: "text", sqlType: "text", notNull: true},
-        {name: "content", type: "text", sqlType: "text", notNull: true},
+        {name: "content", type: "editor", sqlType: "text", notNull: true},
         {name: "is_public", type: "bool", sqlType: "boolean", notNull: true, default: sqlValue(false)},
         {name: "slug", type: "text", sqlType: "text", unique: true, notNull: true, noUpdate: true},
         {name: "tags", type: "text", sqlType: "text"},
@@ -69,7 +69,7 @@ const notesTable: TableData = {
         {name: "cover", type: "file", sqlType: "text"},
         {name: "views", type: "number", sqlType: "integer", noUpdate: true, noInsert: true, default: sqlValue(0)},
         {name: "archived", type: "bool", sqlType: "boolean", noInsert: true, default: sqlValue(false)},
-        {name: "deleted_at", type: "date", sqlType: "timestamp", noInsert: true, default: sqlValue(false)},
+        {name: "deleted_at", type: "date", sqlType: "timestamp", noInsert: true, default: sqlValue(null)},
     ],
     fullTextSearch: {
         fields: ["title", "content", "tags"],

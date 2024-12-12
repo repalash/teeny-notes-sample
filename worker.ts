@@ -1,7 +1,6 @@
-import {$Database, teenyHono, $Env} from "teenybase/worker";
+import {$Database, $Env, OpenApiExtension, teenyHono, PocketUIExtension} from "teenybase/worker";
 import config from './migrations/config.json'
 import {honoJSXAppSSR} from "./hono-jsx-ssr/app";
-import {OpenApiExtension} from "teenybase/worker";
 
 export interface Env {
   Bindings: $Env['Bindings'] & {
@@ -11,17 +10,15 @@ export interface Env {
   Variables: $Env['Variables']
 }
 
-const app = teenyHono<Env>((c)=> {
+const app = teenyHono<Env>(async (c)=> {
   const db = new $Database(c, config, c.env.PRIMARY_DB, c.env.PRIMARY_R2)
   db.extensions.push(new OpenApiExtension(db, true))
+  db.extensions.push(new PocketUIExtension(db))
   return db
+}, undefined, {
+  logger: false,
+  cors: false,
 })
-
-// app.get('/', async (c) => {
-//   const db = c.get('$db')
-//   console.log(db)
-//   return c.json({hello: 'world'})
-// })
 
 app.route('/', honoJSXAppSSR)
 

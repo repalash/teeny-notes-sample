@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.5.0",
-    "teenybase": "0.0.2",
+    "teenybase": "0.0.3",
     "wrangler": "^3.91.0",
     "@cloudflare/workers-types": "^4.20240821.1",
     "hono": "4.6.12",
