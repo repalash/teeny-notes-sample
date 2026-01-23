@@ -17,7 +17,7 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
     if(requireLogin && !c.get('$db').auth.uid) return c.redirect('/login')
     if(requireLogout && !!c.get('$db').auth.uid) return c.redirect('/')
     if (c.req.method === 'POST') {
-        data = (await parseRequestBody(c.req)) as T
+        data = (await c.get('$db').getRequestBody()) as T
         const parsed = zv.safeParse(data)
         if (parsed.error) {
             errors = parsed.error.formErrors.fieldErrors as any

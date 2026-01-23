@@ -109,7 +109,7 @@ export const createNoteRoute = (c: Context<$Env>)=>formRoute(c, zCreateNote, Cre
         // meta: JSON.stringify(JSON.parse(data.meta)),
     }
     const note = await db.table('notes').insert({values: dat, returning: 'slug' })
-    if(!note.length) throw new Error('Unable to create note, make sure you have the necessary permissions')
+    if(!note?.length) throw new Error('Unable to create note, make sure you have the necessary permissions')
     return c.redirect('/notes/view/'+note[0].slug)
 }, true)
 
@@ -137,6 +137,6 @@ export const editNoteRoute = async (c: Context<$Env>, slug: string)=>
                 // meta: JSON.stringify(JSON.parse(data.meta)),
             }
             const note = await db.table('notes').update({setValues: dat, returning: 'slug', where: `slug = "${slug}"`})
-            if(!note.length) throw new Error('Unable to update note, make sure you have the necessary permissions')
+            if(!note?.length) throw new Error('Unable to update note, make sure you have the necessary permissions')
             return c.redirect('/notes/view/'+note[0].slug)
     }, true)

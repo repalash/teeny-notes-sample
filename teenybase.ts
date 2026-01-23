@@ -40,7 +40,7 @@ const userTable: TableData = {
                 passwordReset: {
                     variables: {
                         message_title: 'Password Reset',
-                        message_description: 'Click the button below to reset your password for your {{APP_NAME}} account.',
+                        message_description: 'Click the button below to reset the password for your {{APP_NAME}} account.',
                         message_footer: 'If you did not request this, you can safely ignore this email.',
                         action_text: 'Reset Password',
                         action_link: '{{APP_URL}}#/reset-password/{{TOKEN}}',
@@ -103,9 +103,19 @@ const notesTable: TableData = {
         createdTrigger,
     ],
 }
+const kvStoreTable: TableData = {
+    name: "kv_store",
+    autoSetUid: false,
+    fields: [
+        {name: "key", type: "text", sqlType: "text", notNull: true, primary: true},
+        {name: "value", type: "json", sqlType: "json", notNull: true},
+        {name: "expire", type: "date", sqlType: "timestamp"},
+    ],
+    extensions: [],
+}
 
 export default {
-    tables: [userTable, notesTable],
+    tables: [userTable, notesTable, kvStoreTable],
     appName: "Teeny Notes app",
     appUrl: "https://notes.teenybase.com",
     jwtSecret: "$JWT_SECRET_MAIN",

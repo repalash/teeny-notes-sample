@@ -16,7 +16,7 @@
     "explain-search-notes": "teeny exec --local --explain \"notes/select?select=concat(title,content,tags)=>content&where=notes@@'test OR asd'\"",
     "list-users": "teeny exec --local users/select?select=email",
     "list-notes": "teeny exec --local notes/select?select=*",
-    "exec-sql": "npx wrangler d1 execute PRIMARY_DB --local --persist-to \"./.local-persist\" --json --command \"select * from sqlite_schema\"",
+    "exec-sql": "npx wrangler d1 execute PRIMARY_DB --local --persist-to \"./.local-persist\" --json --command \"select * from sqlite_master\"",
 
     "deploy": "teeny deploy --migrate --remote",
     "secrets-upload": "teeny secrets --remote --upload",
