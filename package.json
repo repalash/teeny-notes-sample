@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "generate": "teeny generate --local",
-    "migrate": "teeny migrate --local",
+    "migrate": "teeny migrate --local --log-level debug",
     "backup:local": "teeny backup --local",
     "dev": "teeny dev --local",
     "build:local": "teeny build --local",
@@ -29,11 +29,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.5.0",
-    "teenybase": "0.0.3",
-    "wrangler": "^3.91.0",
-    "@cloudflare/workers-types": "^4.20240821.1",
-    "hono": "4.6.12",
-    "@hono/zod-validator": "^0.4.1"
+    "teenybase": "file:./../teenybase",
+    "wrangler": "^4.63.0",
+    "@cloudflare/workers-types": "^4.20260210.0",
+    "hono": "^4.11.9",
+    "@hono/zod-validator": "^0.4.1",
+    "zod": "^4.3.6"
   },
   "repository": {
     "type": "git",

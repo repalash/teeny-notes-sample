@@ -1,5 +1,5 @@
 import { $Database, $Env, OpenApiExtension, PocketUIExtension, teenyHono } from 'teenybase/worker';
-import config from './migrations/config.json';
+import config from 'virtual:teenybase';
 import { honoJSXAppSSR } from './hono-jsx-ssr/app';
 
 export interface Env {

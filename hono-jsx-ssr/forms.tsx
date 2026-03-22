@@ -20,7 +20,7 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
         data = (await c.get('$db').getRequestBody()) as T
         const parsed = zv.safeParse(data)
         if (parsed.error) {
-            errors = parsed.error.formErrors.fieldErrors as any
+            errors = parsed.error.flatten().fieldErrors as any
             console.log(data)
             console.log(errors)
             error = 'Invalid form values'
@@ -30,7 +30,7 @@ export async function formRoute<T>(c: Context<$Env>, zv: z.ZodType<T>, Component
             const res = await route(parsed.data).catch((e) => {
                 error = (e as any)?.message || 'Unknown error'
                 if(e instanceof ZodError) {
-                    errors = e.formErrors.fieldErrors as any
+                    errors = e.flatten().fieldErrors as any
                     error = 'Invalid form values'
                 }
                 else if(e?.input)

@@ -1,5 +1,5 @@
 import {DatabaseSettings, sql, sqlValue, TableAuthExtensionData, TableData, TableRulesExtensionData} from "teenybase"
-import {authFields, baseFields, createdTrigger} from "teenybase/scaffolds/fields";
+import {authFields, baseFields, createdTrigger, updatedTrigger} from "teenybase/scaffolds/fields";
 
 const userTable: TableData = {
     name: "users",
@@ -52,6 +52,7 @@ const userTable: TableData = {
     triggers: [
         // raise an error if created column is updated (optional)
         createdTrigger,
+        updatedTrigger,
     ],
 }
 const notesTable: TableData = {
@@ -101,6 +102,7 @@ const notesTable: TableData = {
     triggers: [
         // raise an error if created column is updated (optional)
         createdTrigger,
+        updatedTrigger,
     ],
 }
 const kvStoreTable: TableData = {
@@ -119,6 +121,34 @@ export default {
     appName: "Teeny Notes app",
     appUrl: "https://notes.teenybase.com",
     jwtSecret: "$JWT_SECRET_MAIN",
+    authProviders: [
+        { name: 'google', clientId: '$GOOGLE_CLIENT_ID' },
+    ],
+
+    // todo: increment_view action — needs proper SQLite datetime handling (datetime('now', '+1 day') instead of INTERVAL)
+    // actions: [
+    //     {
+    //         name: 'increment_view',
+    //         applyTableRules: false,
+    //         requireAuth: true,
+    //         params: { slug: 'string' },
+    //         sql: [
+    //             {
+    //                 type: 'SELECT', selects: ['RAISE(ABORT, "Cannot increment view count")'], from: kvStoreTable.name,
+    //                 where: sql`key = concat({:auth.uid}, {:slug}, '_viewed') AND expire > CURRENT_TIMESTAMP`,
+    //             },
+    //             {
+    //                 type: 'INSERT', table: kvStoreTable.name,
+    //                 values: {key: sql`concat({:auth.uid}, {:slug}, '_viewed')`, value: sqlValue(true), expire: sql`datetime('now', '+1 day')`},
+    //             },
+    //             {
+    //                 type: 'UPDATE', table: notesTable.name,
+    //                 set: {views: sql`views + 1`}, where: sql`slug = {:slug}`,
+    //             },
+    //         ],
+    //     }
+    // ],
+
     email: {
         from: "Sender Name <noreply@example.com>",
         tags: ["tag-1"],

@@ -11,13 +11,16 @@
             "ESNext"
         ],
         "types": [
-            "@cloudflare/workers-types/2023-07-01"
+            "@cloudflare/workers-types"
         ],
         "experimentalDecorators": true,
         "jsx": "react-jsx",
         "jsxImportSource": "hono/jsx",
         "outDir": "dist",
-        "declaration": true
+        "declaration": true,
+        "paths": {
+            "virtual:teenybase": ["./teenybase"]
+        }
     },
     "exclude": [
         "node_modules",

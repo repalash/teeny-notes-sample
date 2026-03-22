@@ -3,7 +3,7 @@ import {$Env} from "teenybase/worker";
 import {getSignedCookie, setSignedCookie} from "hono/cookie";
 
 const AUTH_COOKIE = 'TEENY_AUTH'
-const AUTH_COOKIE_SECRET = 'TEENY_AUTH_217369dqhakdw12redq'
+const AUTH_COOKIE_SECRET = 'TEENY_AUTH_217369dqhakdw12redq' // todo put in env
 
 export async function login(c: Context<$Env>, token: string) {
     await setSignedCookie(c, AUTH_COOKIE, token, AUTH_COOKIE_SECRET, {httpOnly: true})

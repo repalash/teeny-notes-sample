@@ -21,7 +21,7 @@ export function LoginCard(props: FormProps) {
 }
 
 export const zLogin = z.object({
-    email: z.string().email(),
+    email: z.email(),
     password: z.string().min(6),
 })
 
@@ -54,7 +54,7 @@ export function RegisterCard(props: FormProps) {
 
 export const zRegister = z.object({
     name: z.string().min(2),
-    email: z.string().email(),
+    email: z.email(),
     username: z.string().min(2),
     password: z.string().min(6),
     passwordConfirm: z.string().min(6),

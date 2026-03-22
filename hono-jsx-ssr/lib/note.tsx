@@ -105,7 +105,7 @@ export const createNoteRoute = (c: Context<$Env>)=>formRoute(c, zCreateNote, Cre
         owner_id: db.auth.uid,
         // adding commas to tags to make it easier to search, todo check this in table sql schema
         // this can also be done in a trigger instead of there
-        tags: ',' + data.tags.split(',').map((t: string)=>t.trim()).filter(t=>t).join(',') + ',',
+        tags: ',' + data.tags.split(',').map((t: string)=>t.trim()).filter((t: string)=>t).join(',') + ',',
         // meta: JSON.stringify(JSON.parse(data.meta)),
     }
     const note = await db.table('notes').insert({values: dat, returning: 'slug' })
@@ -133,7 +133,7 @@ export const editNoteRoute = async (c: Context<$Env>, slug: string)=>
                 ...data,
                 // adding commas to tags to make it easier to search, todo check this in table sql schema
                 // this can also be done in a trigger instead of there
-                tags: ',' + data.tags.split(',').map((t: string)=>t.trim()).filter(t=>t).join(',') + ',',
+                tags: ',' + data.tags.split(',').map((t: string)=>t.trim()).filter((t: string)=>t).join(',') + ',',
                 // meta: JSON.stringify(JSON.parse(data.meta)),
             }
             const note = await db.table('notes').update({setValues: dat, returning: 'slug', where: `slug = "${slug}"`})
