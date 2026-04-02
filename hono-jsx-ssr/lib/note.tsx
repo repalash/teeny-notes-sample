@@ -59,6 +59,11 @@ export const viewNoteRoute = async (c: Context<$Env>, slug: string)=>{
     const db = c.get('$db')
     const note = await getNote(db, slug);
     if(!note) return c.notFound()
+    // Increment view count — fire and forget, don't block page render.
+    // No dedup yet — see plans/actions-request-context.md for per-user dedup via auth.uid/IP.
+    c.executionCtx.waitUntil(
+        db.runAction('increment_view', {slug}).catch(() => {})
+    )
     return c.render(<ViewNoteCard data={note} showView={false} showEdit={note.owner?.id === db.auth.uid}/>)
 }
 

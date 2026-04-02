@@ -21,3 +21,7 @@ lerna-debug.log*
 
 node_modules
 .tmp.*.json
+compose.dev.yaml
+.aibox
+.idea/workspace.xml
+db_backups

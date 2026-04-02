@@ -6,9 +6,9 @@
   "private": true,
   "scripts": {
     "generate": "teeny generate --local",
-    "migrate": "teeny migrate --local --log-level debug",
+    "migrate": "teeny deploy --local --log-level debug",
     "backup:local": "teeny backup --local",
-    "dev": "teeny dev --local",
+    "dev": "teeny dev --local --log-level debug",
     "build:local": "teeny build --local",
     "exec": "teeny exec --local",
     "get-notes": "teeny exec --local \"notes/select?select=title||':'||content||tags=>full,owner_id(id,name,email)\"",
@@ -18,22 +18,22 @@
     "list-notes": "teeny exec --local notes/select?select=*",
     "exec-sql": "npx wrangler d1 execute PRIMARY_DB --local --persist-to \"./.local-persist\" --json --command \"select * from sqlite_master\"",
 
-    "deploy": "teeny deploy --migrate --remote",
+    "deploy": "teeny deploy --remote",
     "secrets-upload": "teeny secrets --remote --upload",
     "build": "teeny build --remote",
     "backup": "teeny backup --remote",
     "generate:remote": "teeny generate --remote",
-    "migrate:remote": "teeny migrate --remote",
+    "migrate:remote": "teeny deploy --remote",
     "dev:remote": "teeny dev --remote",
     "delete-public-notes": "teeny exec --remote -m post notes/delete -b '{\"where\":\"is_public = true\",\"returning\":[\"title\"]}'"
   },
   "devDependencies": {
     "@types/node": "^22.5.0",
-    "teenybase": "file:./../teenybase",
+    "teenybase": "0.0.12",
     "wrangler": "^4.63.0",
     "@cloudflare/workers-types": "^4.20260210.0",
     "hono": "^4.11.9",
-    "@hono/zod-validator": "^0.4.1",
+    "@hono/zod-validator": "^0.7.6",
     "zod": "^4.3.6"
   },
   "repository": {

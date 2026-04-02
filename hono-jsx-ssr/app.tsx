@@ -2,7 +2,7 @@ import {Hono} from "hono";
 import {$Env} from "teenybase/worker";
 import {jsxRenderer, useRequestContext} from "hono/jsx-renderer";
 import {loginRoute, registerRoute} from "./lib/auth";
-import {getLogin, logout} from "./auth";
+import {logout} from "./auth";
 import {BaseLayout} from "./lib/page";
 import {createNoteRoute, editNoteRoute, ViewNoteCard, viewNoteRoute, zCreateNote} from "./lib/note";
 import {NotesListSuspense} from "./lib/notes";
@@ -11,8 +11,8 @@ import {SearchForm} from "./lib/form";
 
 const app = new Hono<$Env>()
 app.use('*', async (c, next) => {
-    const db = c.get('$db')
-    await db.initAuth(await getLogin(c))
+    // initAuth() reads the auth token from the authCookie configured in teenybase.ts
+    await c.get('$db').initAuth()
     return next()
 })
 

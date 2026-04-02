@@ -9,10 +9,10 @@ It includes a sqlite database(d1), file storage(s3/r2), jwt, authentication, cus
 This repository is a sample application with teenybase backend and multiple frontend implementation samples. 
 It can be directly cloned and run locally or deployed on cloudflare.
 
-OpenAPI Docs - https://notes-example.teenybase.com/api/v1/doc/ui
+OpenAPI Docs - https://notes-example.teenybase.work/api/v1/doc/ui
 
 Frontend demos
-- Hono JSX SSR - https://notes-example.teenybase.com
+- Hono JSX SSR - https://notes-example.teenybase.work
 
 ## Contents
 
@@ -63,6 +63,7 @@ Frontend demos
 - [worker.ts](./worker.ts) - Worker entry point
 - [.dev.vars](./.dev.vars) - Development environment variables/secrets
 - [.prod.vars](./.prod.vars) - Production environment variables/secrets
+- [.teenybase](./.teenybase) - CLI project config (API_ROUTE, committed to git)
 
 ## Main directories
 
@@ -154,7 +155,7 @@ wrangler r2 bucket create teeny-notes-sample --location weur
 npm run deploy
 ```
 This would deploy the worker and set the secrets.
-- Copy the deployed route and set it as `API_ROUTE` in `.prod.vars` file. This should look like `https://<worker-name>.<account-name>.workers.dev` unless a different route is set in `wrangler.toml` file. This step is required to apply the migrations in the db from next time.
+- `API_ROUTE` is auto-saved to the `.teenybase` file during deployment. It should look like `https://<worker-name>.<account-name>.workers.dev` unless a different route is set in `wrangler.toml` file. This is required to apply the migrations in the db from next time.
 
 > When running in production environment, remove the flags `RESPOND_WITH_ERRORS` and `RESPOND_WITH_QUERY_LOG` in `wrangler.toml` which are used for debugging in rest api.
 
@@ -172,14 +173,10 @@ Next, deploy the worker to cloudflare.
 
 ```bash
 npm run deploy
-# or teeny deploy --migrate --remote
-# or teeny migrate --deploy --remote
+# or teeny deploy --remote
 ```
 
 On first deployment, the worker will be deployed and database migrations will be applied. On subsequent deployments, the migrations will be applied first, and then the worker will be deployed.
-
-> `teeny deploy` is same as `teeny migrate` as it first migrates the database and then deploys the worker.
-> In the example `npm run deploy` is used, which is same as `teeny migrate --remote`.
 
 If this is the first deployment, the secrets will automatically be uploaded from .prod.vars file. Make sure the secrets are set properly in the `.prod.vars` file.
 
@@ -263,7 +260,7 @@ This step is optional and can be skipped as latest migrations are generating eve
 To apply the migrations and update the database with the settings, run
 ```bash
 npm run migrate
-# or teeny migrate --local
+# or teeny deploy --local
 ```
 
 This will first run generate, then apply the un-applied migrations to the database, and also update the `migrations/config.json` file with the latest settings from `teenybase.ts` file.

@@ -7,7 +7,7 @@ const userTable: TableData = {
     autoSetUid: true, // automatically set the uid to a random uuidv4
     fields: [
         ...baseFields,
-        ...authFields,
+        ...authFields.map(f => f.name === 'role' ? {...f, default: sqlValue('guest')} : f),
     ],
     indexes: [{fields: "role COLLATE NOCASE"}],
     extensions: [
@@ -87,10 +87,10 @@ const notesTable: TableData = {
         {
             name: "rules",
             // Can view if note is public or if user owns it or is admin
-            viewRule: "(is_public = true & !deleted_at & !archived) | auth.role ~ '%admin' | (auth.uid != null & owner_id == auth.uid)",
-            // Cannot list if note is public but can list if user owns it or is admin
-            // todo add count limit
-            listRule: "(is_public & !deleted_at & !archived) | auth.role ~ '%admin' | (auth.uid != null & owner_id == auth.uid)",
+            // Use `deleted_at == null` not `!deleted_at` — SQL NOT NULL evaluates to NULL (falsy), not true
+            viewRule: "(is_public == true & deleted_at == null & archived == false) | auth.role ~ '%admin' | (auth.uid != null & owner_id == auth.uid)",
+            // Can list if note is public or if user owns it or is admin
+            listRule: "(is_public == true & deleted_at == null & archived == false) | auth.role ~ '%admin' | (auth.uid != null & owner_id == auth.uid)",
             // Can create if authenticated and setting self as owner
             createRule: "auth.uid != null & owner_id == auth.uid",
             // Can update if owner and not changing ownership
@@ -119,35 +119,37 @@ const kvStoreTable: TableData = {
 export default {
     tables: [userTable, notesTable, kvStoreTable],
     appName: "Teeny Notes app",
-    appUrl: "https://notes.teenybase.com",
+    appUrl: "https://notes.teenybase.work",
     jwtSecret: "$JWT_SECRET_MAIN",
     authProviders: [
         { name: 'google', clientId: '$GOOGLE_CLIENT_ID' },
     ],
+    authCookie: {
+        name: 'teeny_auth',
+        httpOnly: true,
+        secure: false, // set to true in production (requires HTTPS)
+        sameSite: 'Lax',
+        path: '/',
+    },
 
-    // todo: increment_view action — needs proper SQLite datetime handling (datetime('now', '+1 day') instead of INTERVAL)
-    // actions: [
-    //     {
-    //         name: 'increment_view',
-    //         applyTableRules: false,
-    //         requireAuth: true,
-    //         params: { slug: 'string' },
-    //         sql: [
-    //             {
-    //                 type: 'SELECT', selects: ['RAISE(ABORT, "Cannot increment view count")'], from: kvStoreTable.name,
-    //                 where: sql`key = concat({:auth.uid}, {:slug}, '_viewed') AND expire > CURRENT_TIMESTAMP`,
-    //             },
-    //             {
-    //                 type: 'INSERT', table: kvStoreTable.name,
-    //                 values: {key: sql`concat({:auth.uid}, {:slug}, '_viewed')`, value: sqlValue(true), expire: sql`datetime('now', '+1 day')`},
-    //             },
-    //             {
-    //                 type: 'UPDATE', table: notesTable.name,
-    //                 set: {views: sql`views + 1`}, where: sql`slug = {:slug}`,
-    //             },
-    //         ],
-    //     }
-    // ],
+    actions: [
+        {
+            name: 'increment_view',
+            description: 'Increment view count for a note by slug.',
+            // No auth required — public notes can be viewed by anyone.
+            // No dedup — auth.uid and request.ip are not yet available in SQL mode actions
+            // (see plans/actions-request-context.md). Dedup can be added at the SSR layer
+            // or once request context is available in SQL mode.
+            applyTableRules: false,
+            params: { slug: 'string' },
+            sql: {
+                type: 'UPDATE',
+                table: notesTable.name,
+                set: {views: sql`views + 1`},
+                where: sql`slug = {:slug}`,
+            },
+        },
+    ],
 
     email: {
         from: "Sender Name <noreply@example.com>",
