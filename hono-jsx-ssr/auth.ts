@@ -7,7 +7,7 @@ import {deleteCookie, setCookie} from "hono/cookie";
 // login-password and sign-up, teenybase returns the token in JSON — it does NOT
 // set a cookie (by design: avoids CORS, CDN caching, and mobile client issues).
 // SSR apps must set the cookie themselves after calling the auth API.
-// See: wiki/FRONTEND_GUIDE.md and wiki/CONFIG_REFERENCE.md for details.
+// See: docs/frontend-guide.md and docs/config-reference.md for details.
 
 const AUTH_COOKIE = 'teeny_auth' // must match authCookie.name in teenybase.ts
 
